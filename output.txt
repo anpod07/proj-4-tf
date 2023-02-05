@@ -1,0 +1,2 @@
+my_tf_ec2_elastic_ip = "3.126.23.146"
+my_tf_rds_endpoint = "tfmysql.c2zjjwdqinpi.eu-central-1.rds.amazonaws.com:3306"
