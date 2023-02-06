@@ -14,12 +14,12 @@ pipeline {
     upstream 'proj-4-pipeline'
   }
 
-  stages {
-    stage('CleanWorkspace') {
-      steps {
-        cleanWs()
-      }
-    }
+//  stages {
+//    stage('CleanWorkspace') {
+//      steps {
+//        cleanWs()
+//      }
+//    }
     stage('GetCodeFromGitHub') {
       steps {
         git branch: 'main', credentialsId: 'github-key', url: 'git@github.com:anpod07/proj-4-tf.git'
