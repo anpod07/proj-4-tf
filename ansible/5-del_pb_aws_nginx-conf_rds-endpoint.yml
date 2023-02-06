@@ -1,0 +1,22 @@
+- name: Copy Nginx-conf, Replace RDS endpoint
+  hosts: test1
+  become: yes
+
+  tasks:
+#  - name: Copy pyapp project - DELETE, GET FROM JENKINS
+#    copy: src=files/pyapp.py dest=/home/ninja/pyapp/
+
+#  - name: copy output.txt - DELETE, GET FROM JENKINS
+#    copy: src="files/output.txt" dest="~/"
+#  - name: get sshrds var
+#    shell: "grep 'rds_address' ~/output.txt | awk '{print $3}' | tr -d '\"'"
+#    register: out_rds
+#  - debug: var=out_rds.stdout
+
+#  - name: replace RDS-endpoint in pyapp.py
+#    shell: "sed -i \"s/.*SQLALCHEMY_DATABASE_URI.*/app.config['SQLALCHEMY_DATABASE_URI'] = \\\"mysql:\\\/\\\/admin:07secret07@rds-mysql.c2zjjwdqinpi.eu-central-1.rds.amazonaws.com:3306\\\/db_test\\\"/\" /home/ninja/pyapp/pyapp.py"
+#  - name: check RDS-endpoint in pyapp.py
+#    shell: "grep \"SQLALCHEMY_DATABASE_URI\" /home/ninja/pyapp/pyapp.py"
+#    register: rds_check
+#  - debug: msg="{{rds_check.stdout_lines}}"
+

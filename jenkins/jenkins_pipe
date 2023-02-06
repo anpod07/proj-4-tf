@@ -1,0 +1,126 @@
+pipeline {
+  agent {
+    label 'master'
+//    label 'docker-slave-1'
+  }
+
+  options {
+    buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '3')
+    disableConcurrentBuilds()
+    timestamps()
+  }
+
+  triggers {
+    upstream 'proj-4-pipeline'
+  }
+
+  stages {
+    stage('CleanWorkspace') {
+      steps {
+        cleanWs()
+      }
+    }
+    stage('GetCodeFromGitHub') {
+      steps {
+        git branch: 'main', credentialsId: 'github-key', url: 'git@github.com:anpod07/proj-4-tf.git'
+        sh '''
+          pwd
+          ls -la
+        '''
+      }
+    }
+    stage('TestAWScliAndTerraform') {
+      steps {
+        withCredentials([[
+          $class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: "jenkins-aws-ec2_s3",
+          accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+          secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        ]]) {
+          sh '''
+            aws --version
+            aws s3 ls s3://anpod07-tf-statefile
+            terraform --version
+            ansible --version
+          '''
+        }
+      }
+    }
+    stage('ExecTerraformCode') {
+      steps {
+        withCredentials([[
+          $class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: "jenkins-aws-ec2_s3",
+          accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+          secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        ]]) {
+          dir('terraform') {
+            sh '''
+              pwd
+              terraform init -no-color
+              terraform apply -auto-approve -no-color
+              terraform output > ../ansible/files/output.txt
+            '''
+          }
+        }
+      }
+    }
+    stage('CreateHostsForAnsible') {
+      steps {
+        withCredentials([[
+          $class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: "jenkins-aws-ec2_s3",
+          accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+          secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        ]]) {
+          sh '''
+            pwd
+            echo "[test1]" > ansible/hosts
+            aws ec2 describe-instances \
+              --region 'eu-central-1' \
+              --filters 'Name=tag:Name,Values=my_tf_ec2' \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --output text |\
+              awk '{print $0, " ansible_user=ubuntu"}' >> ansible/hosts
+          '''
+        }
+      }
+    }
+    stage('InstallDockerViaAnsible') {
+      steps {
+        withCredentials([sshUserPrivateKey(
+          credentialsId: 'jenkins-aws-ec2_ssh_srv1', 
+          keyFileVariable: 'SRV1', 
+          usernameVariable: 'ubuntu'
+        )]) {
+          dir('ansible') {
+            sh '''
+              pwd
+              sleep 5
+              ansible-playbook get-info-from-ec2.yml -i hosts --private-key $SRV1
+              ansible-playbook pb_aws_install_docker.yml -i hosts --private-key $SRV1
+            '''
+          }
+        }
+      }
+    }
+    stage('ReplaceDockerImageViaAnsible') {
+      steps {
+        withCredentials([sshUserPrivateKey(
+          credentialsId: 'jenkins-aws-ec2_ssh_srv1', 
+          keyFileVariable: 'SRV1', 
+          usernameVariable: 'ubuntu'
+        )]) {
+          dir('ansible') {
+            sh '''
+              pwd
+              sleep 5
+              ansible-playbook pb_aws_replace_docker.yml -i hosts --private-key $SRV1
+            '''
+          }
+        }
+      }
+    }
+  }
+}
+
