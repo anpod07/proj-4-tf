@@ -10,10 +10,8 @@
     register: out_ls1
   - debug: msg="{{out_ls1.stdout_lines}}"
 
-  - name: copy output.txt - DELETE, GET FROM JENKINS
-    copy: src="files/output.txt" dest="~/"
   - name: get sshrds-variable
-    shell: "grep 'rds_address' ~/output.txt | awk '{print $3}' | tr -d '\"'"
+    shell: "grep 'rds_address' files/output.txt | awk '{print $3}' | tr -d '\"'"
     register: out_rds
   - debug: var=out_rds.stdout
 
