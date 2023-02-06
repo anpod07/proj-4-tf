@@ -14,7 +14,7 @@ pipeline {
     upstream 'proj-4-pipeline'
   }
 
-//  stages {
+  stages {
 //    stage('CleanWorkspace') {
 //      steps {
 //        cleanWs()
@@ -86,7 +86,7 @@ pipeline {
         }
       }
     }
-    stage('InstallDockerViaAnsible') {
+    stage('InstallSoftViaAnsible') {
       steps {
         withCredentials([sshUserPrivateKey(
           credentialsId: 'jenkins-aws-ec2_ssh_srv1', 
@@ -96,10 +96,23 @@ pipeline {
           dir('ansible') {
             sh '''
               pwd
-              sleep 5
-              ansible-playbook get-info-from-ec2.yml -i hosts --private-key $SRV1
-              ansible-playbook pb_aws_install_docker.yml -i hosts --private-key $SRV1
+              sleep 3
             '''
+            sh 'ansible-playbook 1_get-info-from-ec2.yml -i hosts --private-key $SRV1'
+            sh 'ansible-playbook 2_pb_aws_install_soft.yml -i hosts --private-key $SRV1'
+          }
+        }
+      }
+    }
+    stage('ImportDatabaseViaAnsible') {
+      steps {
+        withCredentials([sshUserPrivateKey(
+          credentialsId: 'jenkins-aws-ec2_ssh_srv1', 
+          keyFileVariable: 'SRV1', 
+          usernameVariable: 'ubuntu'
+        )]) {
+          dir('ansible') {
+            sh 'ansible-playbook 3_pb_aws_import-db.yml -i hosts --private-key $SRV1'
           }
         }
       }
@@ -112,11 +125,7 @@ pipeline {
           usernameVariable: 'ubuntu'
         )]) {
           dir('ansible') {
-            sh '''
-              pwd
-              sleep 5
-              ansible-playbook pb_aws_replace_docker.yml -i hosts --private-key $SRV1
-            '''
+            sh 'ansible-playbook 4_pb_aws_replace_docker.yml -i hosts --private-key $SRV1'
           }
         }
       }
