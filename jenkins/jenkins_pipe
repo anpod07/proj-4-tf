@@ -1,5 +1,6 @@
 def EIP = 'some_IP'
 def RDS_ENDPOINT = 'some_URL'
+def IMPORT_RDS = 'some_value'
 
 pipeline {
   agent {
@@ -114,7 +115,18 @@ pipeline {
         }
       }
     }
+    stage('InputByUser') {
+      steps {
+        script {
+          IMPORT_RDS = input message: 'Import default DB to RDS?', 
+                       parameters: [choice(name: 'action', choices: ['yes','no'], description: 'chose action')]
+        }
+      }
+    }
     stage('ImportDatabaseViaAnsible') {
+      when {
+        equals(actual: IMPORT_RDS, expected: "yes")
+      }
       steps {
         withCredentials([sshUserPrivateKey(
           credentialsId: 'jenkins-aws-ec2_ssh_srv1', 
