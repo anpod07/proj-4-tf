@@ -7,3 +7,8 @@
       msg:
       - "Public IP:  {{ansible_default_ipv4.address}}"
       - "OS:         {{ansible_lsb}}"
+  - name: print Elastic IP
+    shell: "echo \"EIP = {{EIP}}\""
+    register: eip
+  - debug: msg="{{eip.stdout}}"
+
