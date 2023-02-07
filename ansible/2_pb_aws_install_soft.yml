@@ -10,10 +10,13 @@
     apt: name=nginx state=latest
   - name: Starting Nginx service
     service: name=nginx state=started enabled=yes
+  - name: Copy SSL-certs
+    copy: src=files/letsencrypt.tar.gz dest=~
+    notify: extract cert archive
   - name: Copy Nginx-conf
-    copy: src=files/default.proxy dest=/etc/nginx/sites-available/default
-#    copy: src=files/default.https dest=/etc/nginx/sites-available/default
+    copy: src=files/default.https dest=/etc/nginx/sites-available/default
     notify: reload Nginx
+
   - name: Installing Mysql-client
     apt: name=mysql-client state=latest
   - name: Installing AWScli
@@ -36,11 +39,6 @@
     changed_when: false
     register: out2
   - debug: msg="{{out2.stdout_lines}}"
-  - name: Check Nginx
-    shell: "ps aux | grep nginx"
-    changed_when: false
-    register: out_ng
-  - debug: msg="{{out_ng.stdout_lines}}"
   - name: Check Mysql-client verion
     shell: "mysql --version"
     changed_when: false
@@ -51,8 +49,24 @@
     changed_when: false
     register: out_aws
   - debug: msg="{{out_aws.stdout_lines}}"
+  - name: Check Nginx
+    shell: "ps aux | grep nginx"
+    changed_when: false
+    register: out_ng
+  - debug: msg="{{out_ng.stdout_lines}}"
+  - name: Check Https
+    shell: "curl -w \"%{http_code}\\\n\" -s -o /dev/null https://pyapp.anpod.tk"
+    changed_when: false
+    register: out_cert
+  - debug: msg="{{out_cert.stdout_lines}}"
 
   handlers:
+  - name: extract cert archive
+    shell:
+      cmd: "
+            tar xzf ~/letsencrypt.tar.gz -C /etc/;
+            nginx -s reload
+           "
   - name: reload Nginx
     shell: "nginx -s reload"
 
