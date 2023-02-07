@@ -4,11 +4,11 @@
 
   tasks:
   - name: print Jenkins variable
-    shell: "echo \"var1 = {{var1}}\""
+    shell: "echo \"var2 = {{var2}}\""
     register: prnt1
-  - debug: msg="{{prnt1}}"
+  - debug: msg="{{prnt1.stdout}}"
   - name: print Jenkins JENKINS_BUILD_NUMBER
     shell: "echo \"JENKINS_BUILD_NUMBER = {{JENKINS_BUILD_NUMBER}}\""
     register: prnt2
-  - debug: msg="{{prnt2}}"
+  - debug: msg="{{prnt2.stdout}}"
 
