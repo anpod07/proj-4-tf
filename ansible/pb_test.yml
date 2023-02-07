@@ -1,0 +1,14 @@
+- name: test with Jenkins variables
+  hosts: test1
+  become: yes
+
+  tasks:
+  - name: print Jenkins variable
+    shell: "echo \"var1 = {{var1}}\""
+    register: prnt1
+  - debug: msg="{{prnt1}}
+  - name: print Jenkins JENKINS_BUILD_NUMBER
+    shell: "echo \"JENKINS_BUILD_NUMBER = {{JENKINS_BUILD_NUMBER}}\""
+    register: prnt2
+  - debug: msg="{{prnt2}}
+
