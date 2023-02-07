@@ -4,8 +4,8 @@ def IMPORT_RDS = 'some_value'
 
 pipeline {
   agent {
-    label 'master'
-//    label 'docker-slave-1'
+//    label 'master'
+    label 'docker-slave-1'
   }
 
   options {
