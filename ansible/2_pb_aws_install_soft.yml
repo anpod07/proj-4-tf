@@ -16,7 +16,6 @@
   - name: Copy Nginx-conf
     copy: src=files/default.https dest=/etc/nginx/sites-available/default
     notify: reload Nginx
-
   - name: Installing Mysql-client
     apt: name=mysql-client state=latest
   - name: Installing AWScli
@@ -25,40 +24,7 @@
     apt: name=docker.io state=latest
   - name: Starting Docker service
     service: name=docker state=started enabled=yes
-  - name: Add $USER to docker Group
-    shell: "usermod -aG docker ubuntu"
-    changed_when: false
-
-  - name: Check Docker service is running
-    shell: "systemctl status docker.service"
-    changed_when: false
-    register: out1
-  - debug: msg="{{out1.stdout_lines}}"
-  - name: Check if ubuntu user is in docker Group
-    shell: "grep docker /etc/group"
-    changed_when: false
-    register: out2
-  - debug: msg="{{out2.stdout_lines}}"
-  - name: Check Mysql-client verion
-    shell: "mysql --version"
-    changed_when: false
-    register: out_my
-  - debug: msg="{{out_my.stdout_lines}}"
-  - name: Check AWScli verion
-    shell: "aws --version"
-    changed_when: false
-    register: out_aws
-  - debug: msg="{{out_aws.stdout_lines}}"
-  - name: Check Nginx
-    shell: "ps aux | grep nginx"
-    changed_when: false
-    register: out_ng
-  - debug: msg="{{out_ng.stdout_lines}}"
-  - name: Check Https
-    shell: "curl -w \"%{http_code}\\\n\" -s -o /dev/null https://pyapp.anpod.tk"
-    changed_when: false
-    register: out_cert
-  - debug: msg="{{out_cert.stdout_lines}}"
+    notify: add user to docker group
 
   handlers:
   - name: extract cert archive
@@ -69,4 +35,6 @@
            "
   - name: reload Nginx
     shell: "nginx -s reload"
+  - name: add user to docker group
+    shell: "usermod -aG docker ubuntu"
 
